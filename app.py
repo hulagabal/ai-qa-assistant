@@ -7,23 +7,23 @@ st.set_page_config(page_title="AI QA Assistant", layout="centered")
 st.title("🚀 AI QA Assistant")
 st.write("Enter a website URL and get QA + Performance report")
 
-# Input
-
 url = st.text_input("Enter URL", "https://example.com")
 
-# Run button
+# ✅ Run only when button clicked
 
 if st.button("Run Test"):
+
     st.info("Running QA checks... please wait ⏳")
+
 
 try:
     # Run QA Engine
     report, summary = run_qa(url)
 
     # ✅ Status
-    if report["status"] == "PASS":
+    if report.get("status") == "PASS":
         st.success("✅ Status: PASS")
-    elif report["status"] == "BLOCKED":
+    elif report.get("status") == "BLOCKED":
         st.warning("🟡 Status: BLOCKED (Bot protection detected)")
     else:
         st.error("❌ Status: FAIL")
@@ -36,12 +36,12 @@ try:
 
         st.metric(
             label="Page Load Time",
-            value=f"{perf['load_time_sec']} sec"
+            value=f"{perf.get('load_time_sec', 'N/A')} sec"
         )
 
-        if perf["rating"] == "FAST":
+        if perf.get("rating") == "FAST":
             st.success("🟢 Fast")
-        elif perf["rating"] == "AVERAGE":
+        elif perf.get("rating") == "AVERAGE":
             st.warning("🟡 Average")
         else:
             st.error("🔴 Slow")
@@ -49,16 +49,9 @@ try:
     # 📊 Issues
     st.subheader("📊 Issues")
 
-    if report["issues"]:
+    if report.get("issues"):
         for issue in report["issues"]:
-            if issue["type"] == "console":
-                st.error(f"🖥️ Console → {issue['details']}")
-            elif issue["type"] == "network":
-                st.error(f"🌐 Network → {issue['details']}")
-            elif issue["type"] == "security":
-                st.warning(f"🛡️ Security → {issue['details']}")
-            else:
-                st.write(f"{issue['type']} → {issue['details']}")
+            st.write(f"{issue.get('type')} → {issue.get('details')}")
     else:
         st.success("No issues found 🎉")
 
@@ -70,10 +63,9 @@ try:
 
     st.code(summary)
 
-    # 📄 Generate HTML Report
+    # 📄 HTML Report
     html_file = generate_html_report(report, summary)
 
-    # Download button
     with open(html_file, "rb") as f:
         st.download_button(
             label="📄 Download HTML Report",
