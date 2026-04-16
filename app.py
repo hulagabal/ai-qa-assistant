@@ -14,7 +14,7 @@ url = st.text_input("Enter URL", "https://example.com")
 # Run button
 
 if st.button("Run Test"):
-st.info("Running QA checks... please wait ⏳")
+    st.info("Running QA checks... please wait ⏳")
 
 try:
     # Run QA Engine
