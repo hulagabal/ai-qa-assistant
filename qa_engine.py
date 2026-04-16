@@ -1,5 +1,10 @@
 from playwright.sync_api import sync_playwright
 import logging
+import subprocess
+import os
+
+if not os.path.exists("/home/appuser/.cache/ms-playwright"):
+    subprocess.run(["playwright", "install", "chromium"])
 
 logger = logging.getLogger(__name__)
 
