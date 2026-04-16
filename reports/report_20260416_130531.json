@@ -1,0 +1,19 @@
+{
+    "url": "https://secure.netfirms.com/secure/login.html",
+    "timestamp": "2026-04-16 13:05:31",
+    "status": "FAIL",
+    "performance": {
+        "load_time_sec": 12.31,
+        "rating": "SLOW"
+    },
+    "issues": [
+        {
+            "type": "console",
+            "details": "[NEWFOLD].[PLUGIN] (13:05:29) ERROR: Unable to initialize Genesys Widgets TypeError: o is not a function\n    at V.<anonymous> (https://static.registration.bluehost.com/genesys/messaging/LATEST/main.js:1:68191)\n    at https://static.registration.bluehost.com/genesys/messaging/LATEST/main.js:1:27559\n    at Object.next (https://static.registration.bluehost.com/genesys/messaging/LATEST/main.js:1:27664)\n    at n (https://static.registration.bluehost.com/genesys/messaging/LATEST/main.js:1:26402)"
+        },
+        {
+            "type": "network",
+            "details": "https://www.google-analytics.com/g/collect?v=2&tid=G-9QVVKRYSPQ&gtm=45je64e1v889608388z86380651za20gzb6380651zd6380651&_p=1776324929199&gcd=13l3l3l3l1l1&npa=0&dma=0&are=1&cid=1329425128.1776324930&frm=0&pscdl=noapi&rcb=11&sr=1280x720&uaa=x86&uab=64&uafvl=Not%253AA-Brand%3B99.0.0.0%7CHeadlessChrome%3B145.0.7632.6%7CChromium%3B145.0.7632.6&uam=&uamb=0&uap=Windows&uapv=19.0.0&uaw=0&ul=en-gb&_s=1&tag_exp=0~115938465~115938469~117266401&sid=1776324930&sct=1&seg=0&dl=https%3A%2F%2Fsecure.netfirms.com%2Fsecure%2Flogin.html&dt=Netfirms%20Login&en=page_view&_fv=1&_nsi=1&_ss=1&ep.previous_page=&ep.page_name=secure.netfirms.com%2Fsecure%2Flogin.html&ep.page_application=None&ep.page_class=None&ep.page_id=domain.com%3A%2Fsecure%2Flogin.html&up.user_type=prospect&up.irpid=&tfd=10808 -> net::ERR_ABORTED"
+        }
+    ]
+}
