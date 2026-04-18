@@ -1,78 +1,102 @@
 import streamlit as st
-from qa_engine import run_qa
+import os
+from datetime import datetime
+
+# Import your existing logic
+from utils.report_engine import generate_json_report, get_summary
 from utils.html_report import generate_html_report
+from playwright.sync_api import sync_playwright
 
-st.set_page_config(page_title="AI QA Assistant", layout="centered")
+st.set_page_config(page_title="QA SaaS MVP", layout="centered")
 
-st.title("🚀 AI QA Assistant")
-st.write("Enter a website URL and get QA + Performance report")
+st.title("🚀 Website QA Checker")
+st.write("Run automated QA checks and generate reports in seconds")
 
-url = st.text_input("Enter URL", "https://example.com")
+# Input
+url = st.text_input("Enter Website URL", "https://example.com")
 
-# ✅ Run only when button clicked
-
-if st.button("Run Test"):
-
-    st.info("Running QA checks... please wait ⏳")
-
-
-try:
-    # Run QA Engine
-    report, summary = run_qa(url)
-
-    # ✅ Status
-    if report.get("status") == "PASS":
-        st.success("✅ Status: PASS")
-    elif report.get("status") == "BLOCKED":
-        st.warning("🟡 Status: BLOCKED (Bot protection detected)")
+# Run Test
+if st.button("Run QA Test"):
+    if not url.startswith("http"):
+        st.error("Please enter a valid URL (include http/https)")
     else:
-        st.error("❌ Status: FAIL")
+        st.info("Running QA checks... please wait")
 
-    # ⚡ Performance
-    if "performance" in report:
-        st.subheader("⚡ Performance")
+        console_errors = []
+        network_errors = []
 
-        perf = report["performance"]
+        try:
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                page = browser.new_page()
 
-        st.metric(
-            label="Page Load Time",
-            value=f"{perf.get('load_time_sec', 'N/A')} sec"
-        )
+                # Capture console errors
+                page.on("console", lambda msg: console_errors.append(msg.text) if msg.type == "error" else None)
 
-        if perf.get("rating") == "FAST":
-            st.success("🟢 Fast")
-        elif perf.get("rating") == "AVERAGE":
-            st.warning("🟡 Average")
-        else:
-            st.error("🔴 Slow")
+                # Capture network errors
+                def handle_request_failed(request):
+                    error = request.failure.error_text if request.failure else "Unknown"
+                    network_errors.append(f"{request.url} -> {error}")
 
-    # 📊 Issues
-    st.subheader("📊 Issues")
+                page.on("requestfailed", handle_request_failed)
 
-    if report.get("issues"):
-        for issue in report["issues"]:
-            st.write(f"{issue.get('type')} → {issue.get('details')}")
-    else:
-        st.success("No issues found 🎉")
+                start_time = datetime.now()
+                response = page.goto(url, wait_until="load", timeout=30000)
+                end_time = datetime.now()
 
-    # 🤖 Summary
-    st.subheader("🤖 Summary")
+                load_time = round((end_time - start_time).total_seconds(), 2)
 
-    if not summary:
-        summary = "No summary available"
+                if load_time < 2:
+                    performance_status = "FAST"
+                elif load_time < 5:
+                    performance_status = "AVERAGE"
+                else:
+                    performance_status = "SLOW"
 
-    st.code(summary)
+                # Basic checks
+                status = "PASS"
+                if not response or response.status >= 400:
+                    status = "FAIL"
 
-    # 📄 HTML Report
-    html_file = generate_html_report(report, summary)
+                title = page.title()
 
-    with open(html_file, "rb") as f:
-        st.download_button(
-            label="📄 Download HTML Report",
-            data=f,
-            file_name="qa_report.html",
-            mime="text/html"
-        )
+                # Generate report
+                report, file_path = generate_json_report(
+                    url, console_errors, network_errors, load_time, performance_status
+                )
 
-except Exception as e:
-    st.error(f"Test failed: {e}")
+                summary = get_summary(report) or "No summary generated"
+                html_file = generate_html_report(report, summary)
+
+                browser.close()
+
+                # UI Output
+                st.success("QA Test Completed")
+
+                st.subheader("📊 Results")
+                st.write(f"Status: {status}")
+                st.write(f"Load Time: {load_time} sec ({performance_status})")
+                st.write(f"Page Title: {title}")
+
+                st.subheader("⚠️ Issues Found")
+                st.write(f"Console Errors: {len(console_errors)}")
+                st.write(f"Network Errors: {len(network_errors)}")
+
+                if console_errors:
+                    st.code("\n".join(console_errors[:5]))
+
+                if network_errors:
+                    st.code("\n".join(network_errors[:5]))
+
+                st.subheader("🤖 AI Summary")
+                st.write(summary)
+
+                # Download buttons
+                with open(html_file, "rb") as f:
+                    st.download_button("Download HTML Report", f, file_name=os.path.basename(html_file))
+
+                with open(file_path, "rb") as f:
+                    st.download_button("Download JSON Report", f, file_name=os.path.basename(file_path))
+
+        except Exception as e:
+            st.error(f"Test failed: {e}")
